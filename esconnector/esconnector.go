@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
 
@@ -32,31 +31,29 @@ func NewESConnector(cfg elasticsearch.Config) ESConnector {
 }
 
 // ESCheck tries to connect to ES at the specified config.
-func (esc *ESConnector) ESCheck() string {
+func (esc *ESConnector) ESCheck() (string, error) {
 	cl := *esc.Client
 	resp, err := cl.Info()
 	if err != nil {
-		return err.Error()
+		return "", err
 	}
-	return resp.String()
+	return resp.String(), nil
 }
 
 // AddIndex creates a new on ES, if not exists.
 func (esc *ESConnector) AddIndex(name string) error {
 	resp, err := esc.Client.Indices.Exists([]string{name})
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	if resp.StatusCode == 404 {
 		// Create index.
-		fmt.Println("index doesn't exist")
+		log.Printf("index doesn't exist: %s\n", name)
 		resp, err = esc.Client.Indices.Create(name)
 		if err != nil || resp.IsError() {
-			fmt.Printf("Error creating index: %s\n", err.Error())
 			return err
 		}
-		fmt.Printf("New index %s created", name)
+		log.Printf("New index created: %s\n", name)
 	}
 	return nil
 }

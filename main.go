@@ -33,10 +33,17 @@ func main() {
 		},
 	}
 	esc := esconnector.NewESConnector(cfg)
-	log.Println(esc.ESCheck())
+	elasticStatus, err := esc.ESCheck()
+	if err != nil {
+		log.Fatalf("ElasticSearch is unreachable: %s\n", err)
+	}
+	log.Println(elasticStatus)
 
 	index := "plantyear"
-	esc.AddIndex(index)
+	err = esc.AddIndex(index)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("Adding records to index: %s\n", index)
 	esc.PutRecord(index, res.Data)
 	log.Println("Completed adding records")
